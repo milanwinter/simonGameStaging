@@ -12,3 +12,7 @@
     opacity: 0.8 ;
     transition: .2s opacity;
 }
+
+.start-button {
+    cursor: pointer;
+}
