@@ -46,7 +46,7 @@ export default class SimonApp extends LightningElement {
     runPathSequence() {
         console.log('got into run path sequence');
         let index = 0;
-        /*    const interval = setInterval(()=> {
+           const interval = setInterval(()=> {
             
             this.template.querySelector('.current-section')?.classList.remove('current-section');
             let className = '.' + this.currentPath[index]
@@ -58,7 +58,7 @@ export default class SimonApp extends LightningElement {
             }
             index ++;
         }, 500)
-        */
+        
     }
 
     // @desc : start a new game
@@ -69,8 +69,23 @@ export default class SimonApp extends LightningElement {
         let sections = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
         this.currentPath = []
         this.currentPath.push(sections[Math.floor(Math.random() * 4)]);
+        console.log(this.currentPath);
         this.gameStarted = true;
-        this.runPathSequence();
+        let index = 0;
+        const interval = setInterval(()=> {
+            console.log('inside the interval', this.currentPath.length);
+            console.log('index',index);
+            this.template.querySelector('.current-section')?.classList.remove('current-section');
+            let className = '.' + this.currentPath[index]
+            let node = this.template.querySelector(className);
+            
+            node.classList.add('current-section');
+            if(index === this.currentPath.length) {
+                clearInterval(interval);
+            }
+            index ++;
+        }, 500)
+       
         console.log('last line')
     }
 
