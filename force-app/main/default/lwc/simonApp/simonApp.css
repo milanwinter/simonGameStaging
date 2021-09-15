@@ -2,7 +2,6 @@
     width:60%;
     margin:auto;
 }
-
 .top-right, .top-left,.bottom-right,.bottom-left {
     cursor:pointer;
     transition: .2s opacity;
@@ -16,3 +15,4 @@
 .start-button {
     cursor: pointer;
 }
+  

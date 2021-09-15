@@ -15,6 +15,7 @@ export default class SimonApp extends LightningElement {
     // @desc    : generate the next path number in a sequence
     // @returns : <number>
     pathGenerator() { 
+        console.log("path generator", ['top-left', 'top-right', 'bottom-right', 'bottom-left'][Math.floor(Math.random() * 4)])
         return ['top-left', 'top-right', 'bottom-right', 'bottom-left'][Math.floor(Math.random() * 4)];
     }
 
@@ -26,22 +27,51 @@ export default class SimonApp extends LightningElement {
             if(this.currentPath[this.pathClickCount] === sectionClicked) {
                 this.pathClickCount++;
                 // do something to indicate success
+                if(this.pathClickCount === this.currentPath.length){
+                    alert('next level');
+                    this.currentPath.push(this.pathGenerator());
+                    this.pathClickCount = 0;
+                    this.runPathSequence()
+
+                }
             } else {
                 this.currentPath = [];
                 this.pathClickCount = 0;
+                alert('you failed');
                 // do something to indicate failure
             }
         }
     }
 
+    runPathSequence() {
+        console.log('got into run path sequence');
+        let index = 0;
+        /*    const interval = setInterval(()=> {
+            
+            this.template.querySelector('.current-section')?.classList.remove('current-section');
+            let className = '.' + this.currentPath[index]
+            let node = this.template.querySelector(className);
+            
+            node.classList.add('current-section');
+            if(index === this.currentPath.length) {
+                clearInterval(interval);
+            }
+            index ++;
+        }, 500)
+        */
+    }
+
     // @desc : start a new game
     startGame() {
+        console.log('in start game function');
         if(this.gameStarted) return;
-
-        console.log('YEEEEEEEEET!!!!!!!');
         this.pathClickCount = 0;
-        this.currentPath = [this.pathGenerator()];
+        let sections = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
+        this.currentPath = []
+        this.currentPath.push(sections[Math.floor(Math.random() * 4)]);
         this.gameStarted = true;
+        this.runPathSequence();
+        console.log('last line')
     }
 
     renderedCallback() {
