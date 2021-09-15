@@ -3,7 +3,7 @@
     margin:auto;
 }
 
-.top-right, .top-left,.bottom-right,.bottom-left, {
+.top-right, .top-left,.bottom-right,.bottom-left {
     cursor:pointer;
     transition: .2s opacity;
 }
