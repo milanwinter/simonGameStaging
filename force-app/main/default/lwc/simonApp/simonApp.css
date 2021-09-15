@@ -2,12 +2,12 @@
     width:60%;
     margin:auto;
 }
-.top-right, .top-left,.bottom-right,.bottom-left {
+.top-right, .top-left, .bottom-right, .bottom-left {
     cursor:pointer;
     transition: .2s opacity;
 }
 
-.top-right:hover, .top-left:hover,.bottom-right:hover,.bottom-left:hover, .current-section {
+.top-right:hover, .top-left:hover, .bottom-right:hover, .bottom-left:hover, .current-section {
     opacity: .8 ;
     transition: .2s opacity;
 }

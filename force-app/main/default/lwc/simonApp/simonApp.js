@@ -1,4 +1,4 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, track} from 'lwc';
 
 export default class SimonApp extends LightningElement {
 
@@ -69,9 +69,10 @@ export default class SimonApp extends LightningElement {
         let sections = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
         this.currentPath = []
         this.currentPath.push(sections[Math.floor(Math.random() * 4)]);
-        console.log(this.currentPath);
-        this.gameStarted = true;
+        this.currentPath = sections;
+        
         let index = 0;
+       
         const interval = setInterval(()=> {
             console.log('inside the interval', this.currentPath.length);
             console.log('index',index);
@@ -79,8 +80,8 @@ export default class SimonApp extends LightningElement {
             let className = '.' + this.currentPath[index]
             let node = this.template.querySelector(className);
             
-            node.classList.add('current-section');
-            if(index === this.currentPath.length) {
+            node? node.classList.add('current-section') : console.log('node dont exist');
+            if(index === this.currentPath.length-1) {
                 clearInterval(interval);
             }
             index ++;
@@ -89,25 +90,5 @@ export default class SimonApp extends LightningElement {
         console.log('last line')
     }
 
-    renderedCallback() {
-        ['.top-right', '.top-left', '.bottom-right', '.bottom-left']
-        .forEach(className => this.template
-            .querySelector(className)
-            .addEventListener('click', this.clickSection(className)));
-        
-        this.template
-            .querySelector('.start-button')
-            .addEventListener('click', this.startGame);
-    }
-
-    disconnectedCallback() {
-        ['.top-right', '.top-left', '.bottom-right', '.bottom-left']
-        .forEach(className => this.template
-            .querySelector(className)
-            .removeEventListener('click', this.clickSection(className)))
-        
-        this.template
-            .querySelector('.start-button')
-            .removeEventListener('click', this.startGame);
-    }
+  
 }
