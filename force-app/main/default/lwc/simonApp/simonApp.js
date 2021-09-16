@@ -46,15 +46,20 @@ export default class SimonApp extends LightningElement {
     runPathSequence() {
         console.log('got into run path sequence');
         let index = 0;
-           const interval = setInterval(()=> {
-            
+        const interval = setInterval(()=> {
+            console.log('inside the interval', this.currentPath.length);
+            console.log('index',index);
             this.template.querySelector('.current-section')?.classList.remove('current-section');
             let className = '.' + this.currentPath[index]
             let node = this.template.querySelector(className);
             
-            node.classList.add('current-section');
-            if(index === this.currentPath.length) {
+            node? node.classList.add('current-section') : console.log('node dont exist');
+            if(index === this.currentPath.length-1) {
                 clearInterval(interval);
+                let timeout = setTimeout(function(){
+                 node.classList.remove('current-section');   
+                }, 500)
+                
             }
             index ++;
         }, 500)
@@ -73,19 +78,7 @@ export default class SimonApp extends LightningElement {
         
         let index = 0;
        
-        const interval = setInterval(()=> {
-            console.log('inside the interval', this.currentPath.length);
-            console.log('index',index);
-            this.template.querySelector('.current-section')?.classList.remove('current-section');
-            let className = '.' + this.currentPath[index]
-            let node = this.template.querySelector(className);
-            
-            node? node.classList.add('current-section') : console.log('node dont exist');
-            if(index === this.currentPath.length-1) {
-                clearInterval(interval);
-            }
-            index ++;
-        }, 500)
+        this.runPathSequence();
        
         console.log('last line')
     }
