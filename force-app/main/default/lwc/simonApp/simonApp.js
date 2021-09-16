@@ -147,6 +147,7 @@ export default class SimonApp extends LightningElement {
     }
 
     pauseGame() {
+        if (!this.gameStarted) { return; }
         console.log("pause game");
         
         this.gameState = this.gameState === GameState.PAUSED ? GameState.IN_PROGRESS : GameState.PAUSED;
