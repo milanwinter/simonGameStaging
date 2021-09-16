@@ -136,7 +136,7 @@ export default class SimonApp extends LightningElement {
                 score: this.score
             });
 
-            this.scoreboard = await getScores();
+            this.scoreboard = [ ...await getScores()];
         } catch(err) {
             console.error(err);
             alert('Internal Server Error');
@@ -303,7 +303,7 @@ export default class SimonApp extends LightningElement {
     async connectedCallback() {
         console.log(scoreField, nameField);
         try {
-            this.scoreboard = await getScores();
+            this.scoreboard = [...await getScores()];
         } catch(err) {
             this.scoreboard = null;
         }
