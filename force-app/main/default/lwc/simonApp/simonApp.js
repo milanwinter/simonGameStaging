@@ -36,6 +36,7 @@ export default class SimonApp extends LightningElement {
         audio.src = URL;
         audio?.play();
     }
+    runPathSequenceIsOnLightUpPhase = true;
 
     // @desc    : generate the next path number in a sequence
     // @returns : <number>
@@ -77,26 +78,31 @@ export default class SimonApp extends LightningElement {
     runPathSequence() {
         console.log('got into run path sequence');
         let index = 0;
+        this.runPathSequenceIsOnLightUpPhase = true;
         const interval = setInterval(()=> {
             this.makeSound(boopURL);
             console.log('inside the interval', this.currentPath.length);
             console.log('index',index);
-            this.template.querySelector('.current-section')?.classList.remove('current-section');
+            console.log('light up phase',this.runPathSequenceIsOnLightUpPhase);
+
             let className = '.' + this.currentPath[index]
             let node = this.template.querySelector(className);
-            
-            node?.classList.add('current-section');
-            if(index === this.currentPath.length-1) {
-                clearInterval(interval);
-                let timeout = setTimeout(() => {
-                    node.classList.remove('current-section'); 
-                    this.whosTurn = PLAYERS_TURN;  
-                }, 500);
-                
-                
+
+            if (this.runPathSequenceIsOnLightUpPhase) {
+                node? node.classList.add('current-section') : console.log('node dont exist');
+            } else {
+                this.template.querySelector('.current-section')?.classList.remove('current-section');
+                if(index === this.currentPath.length-1) {
+                    clearInterval(interval);
+                    let timeout = setTimeout(() => {
+                    //  node.classList.remove('current-section'); 
+                     this.whosTurn = "Your Turn";  
+                    }, 500)
+                }
+                index ++;
             }
-            index ++;
-        }, 500)
+            this.runPathSequenceIsOnLightUpPhase = !this.runPathSequenceIsOnLightUpPhase;
+        }, 300)
         
     }
 
