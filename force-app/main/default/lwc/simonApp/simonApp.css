@@ -1,6 +1,7 @@
 .simon-card {
-    width:60%;
-    margin:auto;
+    width: 40%;
+    max-width: 600px;
+    margin: auto;
 }
 .top-right, .top-left, .bottom-right, .bottom-left {
     cursor:pointer;

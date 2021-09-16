@@ -3,6 +3,10 @@ import { LightningElement, track} from 'lwc';
 import boopURL from '@salesforce/resourceUrl/boop'; 
 import successURL from '@salesforce/resourceUrl/success'; 
 import failURL from '@salesforce/resourceUrl/failure';
+import firstNoteURL from '@salesforce/resourceUrl/firstNote';
+import secondNoteUrl from '@salesforce/resourceUrl/secondNote';
+import thirdNoteUrl from '@salesforce/resourceUrl/thirdNote';
+import fourthNoteUrl from '@salesforce/resourceUrl/forthNote';
 
 const PLAYERS_TURN = "Your Turn";
 const SIMONS_TURN = "Simon's Turn";
@@ -42,9 +46,33 @@ export default class SimonApp extends LightningElement {
     }
 
     // @desc : make the boop noise
-    makeSound(URL) {
+    makeSound(soundOrigin) {
         const audio = this.template.querySelector('audio');
-        audio.src = URL;
+
+        switch (soundOrigin) {
+            case "bottom-right":
+                audio.src = firstNoteURL;
+                break;
+            case "bottom-left":
+                audio.src = secondNoteUrl;
+                break;
+            case "top-right":
+                audio.src = thirdNoteUrl;
+                break;
+            case "top-left":
+                audio.src = fourthNoteUrl;
+                break
+            case "success":
+                audio.src = successURL;
+                break
+            case "failure":
+                audio.src = failURL;
+                break;
+            default:
+                audio.src = ""
+                return;
+        }
+
         audio?.play();
     }
     runPathSequenceIsOnLightUpPhase = true;
@@ -58,24 +86,30 @@ export default class SimonApp extends LightningElement {
     // @desc       : returns an event handler for clicking a section of the game board
     // @className  : <string> name of the class asssociated with this node 
     clickSection(e) {
-        this.makeSound(boopURL);
+        
+        
+        let sectionClicked = e.target.dataset.id;
+        this.makeSound(sectionClicked);
+        
         if (this.gameState !== GameState.IN_PROGRESS) return;
         if(this.whosTurn !== PLAYERS_TURN) return;
 
-        let sectionClicked = e.target.dataset.id;
         if(this.currentPath[this.pathClickCount] === sectionClicked) {
             this.pathClickCount++;
             // do something to indicate success
             if(this.pathClickCount === this.currentPath.length) {
-                this.makeSound(successURL);
+                setTimeout(() => {
+                    this.makeSound("success");
+                },500)
                 setTimeout(() => {
                     this.currentPath.push(this.pathGenerator());
                     this.pathClickCount = 0;
                     this.runPathSequence();
-                }, 1000);
+                    this.whosTurn = SIMONS_TURN;
+                }, 1300);
             }
         } else {
-            this.makeSound(failURL);
+            this.makeSound("failure");
             setTimeout(() => {
                 this.currentPath = [];
                 this.pathClickCount = 0;
@@ -92,27 +126,30 @@ export default class SimonApp extends LightningElement {
         let index = 0;
         this.runPathSequenceIsOnLightUpPhase = true;
         this.simonsTurnInterval = setInterval(()=> {
-            console.log('inside the interval', this.currentPath.length);
-            console.log('index',index);
-            console.log('light up phase',this.runPathSequenceIsOnLightUpPhase);
+    
 
             let className = '.' + this.currentPath[index]
             let node = this.template.querySelector(className);
 
             if (this.runPathSequenceIsOnLightUpPhase) {
-                this.makeSound(boopURL);
-                node? node.classList.add('current-section') : console.log('node dont exist');
+                this.makeSound(this.currentPath[index]);
+                node?.classList.add('current-section');
             } else {
                 this.template.querySelector('.current-section')?.classList.remove('current-section');
+                console.log(index, this.currentPath.length);
                 if(index === this.currentPath.length-1) {
                     clearInterval(this.simonsTurnInterval);
-                    let timeout = setTimeout(() => {
+                    setTimeout(() => {
+                        console.log("in timeout");
                     //  node.classList.remove('current-section'); 
-                     this.whosTurn = "Your Turn";  
+                     this.whosTurn = PLAYERS_TURN;  
                     }, 500)
                 }
+
                 index ++;
+
             }
+            
             this.runPathSequenceIsOnLightUpPhase = !this.runPathSequenceIsOnLightUpPhase;
         }, 300)
         
