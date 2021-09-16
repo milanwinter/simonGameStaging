@@ -8,7 +8,7 @@
 }
 
 .top-right:hover, .top-left:hover, .bottom-right:hover, .bottom-left:hover, .current-section {
-    opacity: .6 ;
+    opacity: .5 ;
     transition: .2s opacity;
 }
 

@@ -25,6 +25,10 @@ export default class SimonApp extends LightningElement {
     // @desc : <number> number of correct clicks a player has made on the current session
     pathClickCount = 0;
 
+    //@desc : <bool> whether the section is in the light up phase
+    runPathSequenceIsOnLightUpPhase = true;
+
+
     // @desc : <number> the current level the user is on
     get level() {
         return this.currentPath.length;
@@ -77,24 +81,28 @@ export default class SimonApp extends LightningElement {
     runPathSequence() {
         console.log('got into run path sequence');
         let index = 0;
+        this.runPathSequenceIsOnLightUpPhase = true;
         const interval = setInterval(()=> {
             this.makeSound(boopURL);
-            console.log('inside the interval', this.currentPath.length);
-            console.log('index',index);
+            
             this.template.querySelector('.current-section')?.classList.remove('current-section');
             let className = '.' + this.currentPath[index]
             let node = this.template.querySelector(className);
             
-            node?.classList.add('current-section');
-            if(index === this.currentPath.length-1) {
-                clearInterval(interval);
-                let timeout = setTimeout(() => {
-                    node.classList.remove('current-section'); 
-                    this.whosTurn = PLAYERS_TURN;  
-                }, 500);
+            if(this.runPathSequenceIsOnLightUpPhase) {
+                node?.classList.add('current-section');
+            } else {
+
+                 if(index === this.currentPath.length-1) {
+                    clearInterval(interval);
+                    let timeout = setTimeout(() => {
+                        node.classList.remove('current-section'); 
+                        this.whosTurn = PLAYERS_TURN;  
+                    }, 500);
                 
-                
+                }
             }
+            this.runPathSequenceIsOnLightUpPhase = !this.runPathSequenceIsOnLightUpPhase;
             index ++;
         }, 500)
         
