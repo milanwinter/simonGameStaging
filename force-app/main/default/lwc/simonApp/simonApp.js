@@ -7,10 +7,19 @@ import failURL from '@salesforce/resourceUrl/failure';
 const PLAYERS_TURN = "Your Turn";
 const SIMONS_TURN = "Simon's Turn";
 
+const GameState = {
+    IN_PROGRESS:"in progress",
+    PAUSED:"paused",
+    NO_GAME:"no game"
+}
+
 export default class SimonApp extends LightningElement {
 
-    // @desc : <bool> whether the game is in session or not
-    gameStarted = false;
+    get gameStarted() {
+        return this.gameState === GameState.IN_PROGRESS || this.gameState === GameState.PAUSED;
+    }
+
+    gameState = GameState.NO_GAME;
 
     // @desc : <string> the URL address of the boop sound that plays when a section is clicked
     boopSound = boopURL;
@@ -24,6 +33,8 @@ export default class SimonApp extends LightningElement {
 
     // @desc : <number> number of correct clicks a player has made on the current session
     pathClickCount = 0;
+
+    simonsTurnInterval = null;
 
     // @desc : <number> the current level the user is on
     get level() {
@@ -48,6 +59,7 @@ export default class SimonApp extends LightningElement {
     // @className  : <string> name of the class asssociated with this node 
     clickSection(e) {
         this.makeSound(boopURL);
+        if (this.gameState !== GameState.IN_PROGRESS) return;
         if(this.whosTurn !== PLAYERS_TURN) return;
 
         let sectionClicked = e.target.dataset.id;
@@ -68,7 +80,7 @@ export default class SimonApp extends LightningElement {
                 this.currentPath = [];
                 this.pathClickCount = 0;
                 this.whosTurn = SIMONS_TURN;
-                this.gameStarted = false;
+                this.gameState = GameState.NO_GAME;
             }, 1000);
 
             // do something to indicate failure
@@ -79,8 +91,7 @@ export default class SimonApp extends LightningElement {
         console.log('got into run path sequence');
         let index = 0;
         this.runPathSequenceIsOnLightUpPhase = true;
-        const interval = setInterval(()=> {
-            this.makeSound(boopURL);
+        this.simonsTurnInterval = setInterval(()=> {
             console.log('inside the interval', this.currentPath.length);
             console.log('index',index);
             console.log('light up phase',this.runPathSequenceIsOnLightUpPhase);
@@ -89,11 +100,12 @@ export default class SimonApp extends LightningElement {
             let node = this.template.querySelector(className);
 
             if (this.runPathSequenceIsOnLightUpPhase) {
+                this.makeSound(boopURL);
                 node? node.classList.add('current-section') : console.log('node dont exist');
             } else {
                 this.template.querySelector('.current-section')?.classList.remove('current-section');
                 if(index === this.currentPath.length-1) {
-                    clearInterval(interval);
+                    clearInterval(this.simonsTurnInterval);
                     let timeout = setTimeout(() => {
                     //  node.classList.remove('current-section'); 
                      this.whosTurn = "Your Turn";  
@@ -108,6 +120,7 @@ export default class SimonApp extends LightningElement {
 
     // @desc : start a new game
     startGame() {
+
         if(this.gameStarted) return;
         this.pathClickCount = 0;
         let sections = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
@@ -117,10 +130,25 @@ export default class SimonApp extends LightningElement {
         this.whosTurn = SIMONS_TURN;
        
         this.runPathSequence();
-        this.gameStarted = true;
+        this.gameState = GameState.IN_PROGRESS;
        
         
     }
 
-  
+    endGame() {
+        console.log("end game");
+
+        this.currentPath = [];
+        this.pathClickCount = 0;
+        this.whosTurn = SIMONS_TURN;
+        this.gameState = GameState.NO_GAME;
+        clearInterval(this.simonsTurnInterval);
+        this.template.querySelector('.current-section')?.classList.remove('current-section');
+    }
+
+    pauseGame() {
+        console.log("pause game");
+        
+        this.gameState = this.gameState === GameState.PAUSED ? GameState.IN_PROGRESS : GameState.PAUSED;
+    }
 }
