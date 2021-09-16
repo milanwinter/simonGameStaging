@@ -8,6 +8,12 @@ import secondNoteUrl from '@salesforce/resourceUrl/secondNote';
 import thirdNoteUrl from '@salesforce/resourceUrl/thirdNote';
 import fourthNoteUrl from '@salesforce/resourceUrl/forthNote';
 
+import getScores from '@salesforce/apex/SimonAppController.getScores';
+import createScore from '@salesforce/apex/SimonAppController.createScore';
+
+import scoreField from '@salesforce/schema/Score__c.Score__c';
+import nameField from '@salesforce/schema/Score__c.Player_Name__c'
+
 const PLAYERS_TURN = "Your Turn";
 const SIMONS_TURN = "Simon's Turn";
 
@@ -17,10 +23,77 @@ const GameState = {
     NO_GAME:"no game"
 }
 
+const COLOR_SCHEMA_TYPES = {
+    DEFAULT: 'DEFAULT'
+}
+
+const MODAL_CLASSES = {
+    OPEN: {
+        MODAL: 'slds-modal slds-fade-in-open',
+        BACKDROP: "slds-backdrop slds-backdrop_open"
+    },
+    CLOSED: {
+        MODAL: 'slds-modal',
+        BACKDROP: 'slds-backdrop'
+    }
+}
+
 export default class SimonApp extends LightningElement {
+
+    // @desc : the class for the modal
+    modalClass = MODAL_CLASSES.CLOSED.MODAL
+
+    // @desc : the class for the modal's backdrop
+    backdropClass = MODAL_CLASSES.CLOSED.BACKDROP
+
+    // @desc : <number> score from last game
+    score = 0;
+
+    // @desc : <array> list of score data
+    @track
+    scoreboard;
+    nameApiName = nameField.fieldApiName;
+    scoreApiName = scoreField.fieldApiName;
+    scoreboardColumns = [
+        { label: 'Player Name', fieldName: this.nameApiName},
+        { label: 'Highest Level', fieldName: this.scoreApiName}
+    ];
+
+    // @desc : <string>
+    playerName = '';
+
+    // @desc : <object> color schemas for Simon
+    colorSchemas = {
+        DEFAULT: ["#00e1ff", "#eded00", "#0f5", "#ff002b"]
+    }
+
+    // @desc : <string> the selected color schema
+    selectedSchema = COLOR_SCHEMA_TYPES.DEFAULT;
+
+    /* @desc: getters for the specific colors */
+    get topLeftColor() {
+        return this.colorSchemas[this.selectedSchema][0];
+    }
+
+    get topRightColor() {
+        return this.colorSchemas[this.selectedSchema][1];
+    }
+
+    get bottomRightColor() {
+        return this.colorSchemas[this.selectedSchema][2];
+    }
+
+    get bottomLeftColor() {
+        return this.colorSchemas[this.selectedSchema][3];
+    }
 
     get gameStarted() {
         return this.gameState === GameState.IN_PROGRESS || this.gameState === GameState.PAUSED;
+    }
+
+    // @desc : <bool> returns whether the game is paused or not
+    get gamePaused() {
+        return this.gameState === GameState.PAUSED;
     }
 
     gameState = GameState.NO_GAME;
@@ -43,6 +116,36 @@ export default class SimonApp extends LightningElement {
     // @desc : <number> the current level the user is on
     get level() {
         return this.currentPath.length;
+    }
+
+    onChange(e) {
+        this[e.target.name] = e.target.value;
+    }
+
+    async submitScore(e) {
+        e.preventDefault();
+
+        if(!this.playerName) {
+            alert('Enter Player Name');
+            return;
+        }
+
+        try {
+            await createScore({
+                playerName: this.playerName,
+                score: this.score
+            });
+
+            this.scoreboard = await getScores();
+        } catch(err) {
+            console.error(err);
+            alert('Internal Server Error');
+            return;
+        }
+
+        this.playerName = '';
+        this.score = '';
+        this.closeScoreModal();
     }
 
     // @desc : make the boop noise
@@ -111,14 +214,26 @@ export default class SimonApp extends LightningElement {
         } else {
             this.makeSound("failure");
             setTimeout(() => {
+                this.score = this.level;
                 this.currentPath = [];
                 this.pathClickCount = 0;
                 this.whosTurn = SIMONS_TURN;
                 this.gameState = GameState.NO_GAME;
+                this.spawnScoreModal();
             }, 1000);
 
             // do something to indicate failure
         }
+    }
+
+    spawnScoreModal() {
+        this.modalClass = MODAL_CLASSES.OPEN.MODAL;
+        this.backdropClass = MODAL_CLASSES.OPEN.BACKDROP;
+    }
+
+    closeScoreModal() {
+        this.modalClass = MODAL_CLASSES.CLOSED.MODAL;
+        this.backdropClass = MODAL_CLASSES.CLOSED.BACKDROP;
     }
 
     runPathSequence() {
@@ -136,13 +251,10 @@ export default class SimonApp extends LightningElement {
                 node?.classList.add('current-section');
             } else {
                 this.template.querySelector('.current-section')?.classList.remove('current-section');
-                console.log(index, this.currentPath.length);
                 if(index === this.currentPath.length-1) {
                     clearInterval(this.simonsTurnInterval);
                     setTimeout(() => {
-                        console.log("in timeout");
-                    //  node.classList.remove('current-section'); 
-                     this.whosTurn = PLAYERS_TURN;  
+                        this.whosTurn = PLAYERS_TURN;  
                     }, 500)
                 }
 
@@ -159,6 +271,7 @@ export default class SimonApp extends LightningElement {
     startGame() {
 
         if(this.gameStarted) return;
+
         this.pathClickCount = 0;
         let sections = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
         this.currentPath = []
@@ -173,8 +286,6 @@ export default class SimonApp extends LightningElement {
     }
 
     endGame() {
-        console.log("end game");
-
         this.currentPath = [];
         this.pathClickCount = 0;
         this.whosTurn = SIMONS_TURN;
@@ -184,9 +295,17 @@ export default class SimonApp extends LightningElement {
     }
 
     pauseGame() {
-        if (!this.gameStarted) { return; }
-        console.log("pause game");
+        if (!this.gameStarted) return;
         
-        this.gameState = this.gameState === GameState.PAUSED ? GameState.IN_PROGRESS : GameState.PAUSED;
+        this.gameState = (this.gameState === GameState.PAUSED) ? GameState.IN_PROGRESS : GameState.PAUSED;
+    }
+
+    async connectedCallback() {
+        console.log(scoreField, nameField);
+        try {
+            this.scoreboard = await getScores();
+        } catch(err) {
+            this.scoreboard = null;
+        }
     }
 }
