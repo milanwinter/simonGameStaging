@@ -1,9 +1,19 @@
 import { LightningElement, track} from 'lwc';
 
+import boopURL from '@salesforce/resourceUrl/boop'; 
+import successURL from '@salesforce/resourceUrl/success'; 
+import failURL from '@salesforce/resourceUrl/failure';
+
+const PLAYERS_TURN = "Your Turn";
+const SIMONS_TURN = "Simon's Turn";
+
 export default class SimonApp extends LightningElement {
 
     // @desc : <bool> whether the game is in session or not
     gameStarted = false;
+
+    // @desc : <string> the URL address of the boop sound that plays when a section is clicked
+    boopSound = boopURL;
 
     // @desc : <array> the current path for the user to follow
     @track
@@ -15,33 +25,50 @@ export default class SimonApp extends LightningElement {
     // @desc : <number> number of correct clicks a player has made on the current session
     pathClickCount = 0;
 
+    // @desc : <number> the current level the user is on
+    get level() {
+        return this.currentPath.length;
+    }
+
+    // @desc : make the boop noise
+    makeSound(URL) {
+        const audio = this.template.querySelector('audio');
+        audio.src = URL;
+        audio?.play();
+    }
+
     // @desc    : generate the next path number in a sequence
     // @returns : <number>
     pathGenerator() { 
-        
         return ['top-left', 'top-right', 'bottom-right', 'bottom-left'][Math.floor(Math.random() * 4)];
     }
 
     // @desc       : returns an event handler for clicking a section of the game board
     // @className  : <string> name of the class asssociated with this node 
     clickSection(e) {
-        let sectionClicked = e.target.dataset.id 
+        this.makeSound(boopURL);
+        if(this.whosTurn !== PLAYERS_TURN) return;
+
+        let sectionClicked = e.target.dataset.id;
         if(this.currentPath[this.pathClickCount] === sectionClicked) {
             this.pathClickCount++;
             // do something to indicate success
-            if(this.pathClickCount === this.currentPath.length){
-                alert('next level');
-                this.currentPath.push(this.pathGenerator());
-                this.pathClickCount = 0;
-                this.runPathSequence()
-
+            if(this.pathClickCount === this.currentPath.length) {
+                this.makeSound(successURL);
+                setTimeout(() => {
+                    this.currentPath.push(this.pathGenerator());
+                    this.pathClickCount = 0;
+                    this.runPathSequence();
+                }, 1000);
             }
         } else {
-            this.currentPath = [];
-            this.pathClickCount = 0;
-            this.whosTurn = "Simon's Turn"
-            this.gameStarted = false;
-            alert('you failed');
+            this.makeSound(failURL);
+            setTimeout(() => {
+                this.currentPath = [];
+                this.pathClickCount = 0;
+                this.whosTurn = SIMONS_TURN;
+                this.gameStarted = false;
+            }, 1000);
 
             // do something to indicate failure
         }
@@ -51,19 +78,20 @@ export default class SimonApp extends LightningElement {
         console.log('got into run path sequence');
         let index = 0;
         const interval = setInterval(()=> {
+            this.makeSound(boopURL);
             console.log('inside the interval', this.currentPath.length);
             console.log('index',index);
             this.template.querySelector('.current-section')?.classList.remove('current-section');
             let className = '.' + this.currentPath[index]
             let node = this.template.querySelector(className);
             
-            node? node.classList.add('current-section') : console.log('node dont exist');
+            node?.classList.add('current-section');
             if(index === this.currentPath.length-1) {
                 clearInterval(interval);
                 let timeout = setTimeout(() => {
-                 node.classList.remove('current-section'); 
-                 this.whosTurn = "Your Turn";  
-                }, 500)
+                    node.classList.remove('current-section'); 
+                    this.whosTurn = PLAYERS_TURN;  
+                }, 500);
                 
                 
             }
@@ -80,7 +108,7 @@ export default class SimonApp extends LightningElement {
         this.currentPath = []
         this.currentPath.push(sections[Math.floor(Math.random() * 4)]);
         
-        this.whosTurn = "Simon's Turn!"
+        this.whosTurn = SIMONS_TURN;
        
         this.runPathSequence();
         this.gameStarted = true;

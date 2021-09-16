@@ -1,8 +1,10 @@
 <template>
+    <audio src={boopSound} type="audio/mpeg"></audio>
     <lightning-card title="Welcome to Simon!">
         <div class="simon-card">
             <template if:true={gameStarted}>
                 <h1>{whosTurn}</h1>
+                <p>Level {level}</p>
             </template>
             <svg enable-background="new 0 0 2500 2500" viewBox="0 0 2500 2500" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="1250" cy="1250" r="1250"/>
